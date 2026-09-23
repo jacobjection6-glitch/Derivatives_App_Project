@@ -1,0 +1,6 @@
+streamlit
+pnsea
+numpy
+pandas
+scipy
+yfinance
