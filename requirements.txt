@@ -4,3 +4,5 @@ curl_cffi==0.7.4
 pandas
 numpy
 scipy
+yfinance
+pytz
