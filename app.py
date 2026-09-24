@@ -945,178 +945,178 @@ try:
 
     )
 
+        # ============================================================
+    # THETA PER DAY
     # ============================================================
-# THETA PER DAY
-# ============================================================
-
-call_theta_daily = (
-    call_theta / 365
-)
-
-put_theta_daily = (
-    put_theta / 365
-)
-
-
-
-# ============================================================
-# THETA PER LOT PER DAY
-# ============================================================
-
-call_theta_lot_daily = (
-
-    call_theta_daily *
-    NIFTY_LOT_SIZE
-
-)
-
-
-put_theta_lot_daily = (
-
-    put_theta_daily *
-    NIFTY_LOT_SIZE
-
-)
-
-
-
-
-# ============================================================
-# VEGA PER 1% IV CHANGE
-# ============================================================
-
-call_vega_1pct = (
-
-    call_vega / 100
-
-)
-
-
-put_vega_1pct = (
-
-    put_vega / 100
-
-)
-
-
-
-
-# ============================================================
-# VEGA PER LOT
-# ============================================================
-
-call_vega_lot = (
-
-    call_vega_1pct *
-    NIFTY_LOT_SIZE
-
-)
-
-
-put_vega_lot = (
-
-    put_vega_1pct *
-    NIFTY_LOT_SIZE
-
-)
-
-
-
-
-# ============================================================
-# RHO PER 1% RATE CHANGE
-# ============================================================
-
-call_rho_1pct = (
-
-    call_rho / 100
-
-)
-
-
-put_rho_1pct = (
-
-    put_rho / 100
-
-)
-
-
-
-
-# ============================================================
-# IV - HISTORICAL VOLATILITY
-# ============================================================
-
-call_iv_hv = (
-
-    call_iv -
-    hv_percent
-
-)
-
-
-put_iv_hv = (
-
-    put_iv -
-    hv_percent
-
-)
-
-
-
-
-# ============================================================
-# MARKET PRICE VS BS PRICE
-# ============================================================
-
-call_difference = (
-
-    call_price -
-    call_bs_price
-
-)
-
-
-put_difference = (
-
-    put_price -
-    put_bs_price
-
-)
-
-
-
-
-# ============================================================
-# PUT-CALL PARITY
-# ============================================================
-
-parity_call = (
-
-    call_price -
-    put_price
-
-)
-
-
-
-parity_theoretical = (
-
-    S -
-
-    K *
-    np.exp(-r * T)
-
-)
-
-
-
-parity_difference = (
-
-    parity_call -
-    parity_theoretical
-
-)
+    
+    call_theta_daily = (
+        call_theta / 365
+    )
+    
+    put_theta_daily = (
+        put_theta / 365
+    )
+    
+    
+    
+    # ============================================================
+    # THETA PER LOT PER DAY
+    # ============================================================
+    
+    call_theta_lot_daily = (
+    
+        call_theta_daily *
+        NIFTY_LOT_SIZE
+    
+    )
+    
+    
+    put_theta_lot_daily = (
+    
+        put_theta_daily *
+        NIFTY_LOT_SIZE
+    
+    )
+    
+    
+    
+    
+    # ============================================================
+    # VEGA PER 1% IV CHANGE
+    # ============================================================
+    
+    call_vega_1pct = (
+    
+        call_vega / 100
+    
+    )
+    
+    
+    put_vega_1pct = (
+    
+        put_vega / 100
+    
+    )
+    
+    
+    
+    
+    # ============================================================
+    # VEGA PER LOT
+    # ============================================================
+    
+    call_vega_lot = (
+    
+        call_vega_1pct *
+        NIFTY_LOT_SIZE
+    
+    )
+    
+    
+    put_vega_lot = (
+    
+        put_vega_1pct *
+        NIFTY_LOT_SIZE
+    
+    )
+    
+    
+    
+    
+    # ============================================================
+    # RHO PER 1% RATE CHANGE
+    # ============================================================
+    
+    call_rho_1pct = (
+    
+        call_rho / 100
+    
+    )
+    
+    
+    put_rho_1pct = (
+    
+        put_rho / 100
+    
+    )
+    
+    
+    
+    
+    # ============================================================
+    # IV - HISTORICAL VOLATILITY
+    # ============================================================
+    
+    call_iv_hv = (
+    
+        call_iv -
+        hv_percent
+    
+    )
+    
+    
+    put_iv_hv = (
+    
+        put_iv -
+        hv_percent
+    
+    )
+    
+    
+    
+    
+    # ============================================================
+    # MARKET PRICE VS BS PRICE
+    # ============================================================
+    
+    call_difference = (
+    
+        call_price -
+        call_bs_price
+    
+    )
+    
+    
+    put_difference = (
+    
+        put_price -
+        put_bs_price
+    
+    )
+    
+    
+    
+    
+    # ============================================================
+    # PUT-CALL PARITY
+    # ============================================================
+    
+    parity_call = (
+    
+        call_price -
+        put_price
+    
+    )
+    
+    
+    
+    parity_theoretical = (
+    
+        S -
+    
+        K *
+        np.exp(-r * T)
+    
+    )
+    
+    
+    
+    parity_difference = (
+    
+        parity_call -
+        parity_theoretical
+    
+    )
 
     # ========================================================
     # LAST UPDATE TIME
