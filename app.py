@@ -16,7 +16,7 @@ from pnsea import NSE
 
 
 # ============================================================
-# TIMEZONE SETTINGS
+# TIMEZONE
 # ============================================================
 
 IST = pytz.timezone("Asia/Kolkata")
@@ -46,6 +46,7 @@ st.caption(
 )
 
 
+
 # ============================================================
 # SIDEBAR SETTINGS
 # ============================================================
@@ -66,6 +67,7 @@ r = st.sidebar.number_input(
 r = r / 100
 
 
+
 NIFTY_LOT_SIZE = st.sidebar.number_input(
     "NIFTY Lot Size",
     min_value=1,
@@ -75,9 +77,11 @@ NIFTY_LOT_SIZE = st.sidebar.number_input(
 )
 
 
+
 refresh_button = st.sidebar.button(
     "🔄 Refresh Live Data"
 )
+
 
 
 # ============================================================
@@ -88,6 +92,16 @@ refresh_button = st.sidebar.button(
 def initialize_nse():
 
     return NSE()
+
+
+
+# IMPORTANT:
+# Create NSE object here
+# before get_live_nifty_data()
+
+nse = initialize_nse()
+
+
 
 # ============================================================
 # HISTORICAL VOLATILITY
@@ -106,7 +120,9 @@ def get_historical_volatility():
 
 
     if nifty_history.empty:
+
         return np.nan
+
 
 
     if isinstance(
@@ -116,8 +132,9 @@ def get_historical_volatility():
 
         close_prices = (
             nifty_history["Close"]
-            .iloc[:, 0]
+            .iloc[:,0]
         )
+
 
     else:
 
@@ -126,7 +143,9 @@ def get_historical_volatility():
         )
 
 
+
     close_prices = close_prices.dropna()
+
 
 
     log_returns = np.log(
@@ -135,27 +154,31 @@ def get_historical_volatility():
     ).dropna()
 
 
+
     daily_volatility = (
         log_returns.std()
     )
 
 
-    historical_volatility = (
+
+    annual_volatility = (
         daily_volatility *
         np.sqrt(252)
     )
 
 
-    return historical_volatility * 100
+
+    return annual_volatility * 100
 
 
 
 # ============================================================
-# GET LIVE NIFTY DATA
+# FETCH LIVE NSE OPTION CHAIN
 # ============================================================
 
 @st.cache_data(ttl=25)
 def get_live_nifty_data():
+
 
     try:
 
@@ -177,25 +200,25 @@ def get_live_nifty_data():
 
 
         return (
+
             option_chain_data,
             expiry_dates,
             nifty_spot
+
         )
 
 
     except Exception as e:
 
+
         st.error(
             "Unable to fetch NSE option chain data"
         )
 
+
         st.exception(e)
 
-        st.stop()
-
-
-
-# ============================================================
+        # ============================================================
 # FIND NEAREST EXPIRY
 # ============================================================
 
@@ -203,12 +226,10 @@ def get_nearest_expiry(expiry_dates):
 
     now = datetime.now(IST)
 
-
     valid_expiries = []
 
 
     for expiry in expiry_dates:
-
 
         try:
 
@@ -236,7 +257,9 @@ def get_nearest_expiry(expiry_dates):
         return None
 
 
+
     return min(valid_expiries)
+
 
 
 
@@ -265,6 +288,7 @@ def calculate_time_to_expiry(
     )
 
 
+
     seconds_to_expiry = (
 
         expiry_datetime -
@@ -276,7 +300,7 @@ def calculate_time_to_expiry(
 
     if seconds_to_expiry <= 0:
 
-        return 0,0
+        return 0, 0
 
 
 
@@ -288,6 +312,7 @@ def calculate_time_to_expiry(
     )
 
 
+
     days_to_expiry = (
 
         seconds_to_expiry /
@@ -296,13 +321,17 @@ def calculate_time_to_expiry(
     )
 
 
+
     return (
         T,
         days_to_expiry
     )
 
+
+
+
 # ============================================================
-# BLACK-SCHOLES CALL
+# BLACK-SCHOLES CALL PRICE
 # ============================================================
 
 def black_scholes_call(
@@ -313,13 +342,19 @@ def black_scholes_call(
     sigma
 ):
 
+
     d1 = (
+
         np.log(S / K)
+
         +
+
         (
             r +
             (sigma ** 2) / 2
-        ) * T
+        )
+
+        * T
 
     ) / (
 
@@ -329,13 +364,16 @@ def black_scholes_call(
     )
 
 
+
     d2 = (
 
         d1 -
+
         sigma *
         np.sqrt(T)
 
     )
+
 
 
     price = (
@@ -360,8 +398,9 @@ def black_scholes_call(
 
 
 
+
 # ============================================================
-# BLACK-SCHOLES PUT
+# BLACK-SCHOLES PUT PRICE
 # ============================================================
 
 def black_scholes_put(
@@ -372,7 +411,9 @@ def black_scholes_put(
     sigma
 ):
 
+
     d1 = (
+
         np.log(S / K)
 
         +
@@ -380,7 +421,9 @@ def black_scholes_put(
         (
             r +
             (sigma ** 2) / 2
-        ) * T
+        )
+
+        * T
 
     ) / (
 
@@ -390,13 +433,16 @@ def black_scholes_put(
     )
 
 
+
     d2 = (
 
         d1 -
+
         sigma *
         np.sqrt(T)
 
     )
+
 
 
     price = (
@@ -413,15 +459,14 @@ def black_scholes_put(
     )
 
 
+
     return (
         price,
         d1,
         d2
     )
 
-
-
-# ============================================================
+    # ============================================================
 # CALL GREEKS
 # ============================================================
 
@@ -435,9 +480,13 @@ def call_greeks(
     d2
 ):
 
+
+    # Delta
     delta = norm.cdf(d1)
 
 
+
+    # Gamma
     gamma = (
 
         norm.pdf(d1)
@@ -453,12 +502,16 @@ def call_greeks(
     )
 
 
+
+    # Theta
     theta = (
 
         -(
+
             S *
             norm.pdf(d1) *
             sigma
+
         )
 
         /
@@ -478,6 +531,8 @@ def call_greeks(
     )
 
 
+
+    # Vega
     vega = (
 
         S *
@@ -487,6 +542,8 @@ def call_greeks(
     )
 
 
+
+    # Rho
     rho = (
 
         K *
@@ -497,13 +554,17 @@ def call_greeks(
     )
 
 
+
     return (
+
         delta,
         gamma,
         theta,
         vega,
         rho
+
     )
+
 
 
 
@@ -521,6 +582,8 @@ def put_greeks(
     d2
 ):
 
+
+    # Delta
     delta = (
 
         norm.cdf(d1)
@@ -530,6 +593,8 @@ def put_greeks(
     )
 
 
+
+    # Gamma
     gamma = (
 
         norm.pdf(d1)
@@ -545,12 +610,16 @@ def put_greeks(
     )
 
 
+
+    # Theta
     theta = (
 
         -(
+
             S *
             norm.pdf(d1) *
             sigma
+
         )
 
         /
@@ -570,6 +639,8 @@ def put_greeks(
     )
 
 
+
+    # Vega
     vega = (
 
         S *
@@ -579,6 +650,8 @@ def put_greeks(
     )
 
 
+
+    # Rho
     rho = (
 
         -K *
@@ -589,28 +662,34 @@ def put_greeks(
     )
 
 
+
     return (
+
         delta,
         gamma,
         theta,
         vega,
         rho
+
     )
 
-# ============================================================
+    # ============================================================
 # MAIN ENGINE
 # ============================================================
 
 try:
 
+
     with st.spinner(
         "Fetching live NIFTY option-chain data..."
     ):
+
 
         (
             option_chain_data,
             expiry_dates,
             nifty_spot
+
         ) = get_live_nifty_data()
 
 
@@ -632,12 +711,13 @@ try:
 
 
     # ========================================================
-    # NEAREST EXPIRY
+    # FIND NEAREST EXPIRY
     # ========================================================
 
     nearest_expiry = get_nearest_expiry(
         expiry_dates
     )
+
 
 
     if nearest_expiry is None:
@@ -674,8 +754,9 @@ try:
 
 
 
+
     # ========================================================
-    # ATM STRIKE
+    # ATM STRIKE SELECTION
     # ========================================================
 
     option_chain_data[
@@ -710,22 +791,28 @@ try:
 
 
 
+
     # ========================================================
     # MARKET OPTION PRICE
     # ========================================================
 
     call_price = float(
+
         atm_row[
             "CE_lastPrice"
         ]
+
     )
 
 
     put_price = float(
+
         atm_row[
             "PE_lastPrice"
         ]
+
     )
+
 
 
 
@@ -755,14 +842,10 @@ try:
     # Convert IV %
     # into decimal
 
-    call_sigma = (
-        call_iv / 100
-    )
+    call_sigma = call_iv / 100
 
+    put_sigma = put_iv / 100
 
-    put_sigma = (
-        put_iv / 100
-    )
 
 
 
@@ -776,30 +859,9 @@ try:
 
 
 
-    # ========================================================
-    # IV VALIDATION
-    # ========================================================
-
-    if (
-
-        call_sigma <= 0
-
-        or
-
-        put_sigma <= 0
-
-    ):
-
-        st.error(
-            "Invalid IV received from NSE."
-        )
-
-        st.stop()
-
-
 
     # ========================================================
-    # BLACK-SCHOLES PRICE
+    # BLACK-SCHOLES CALCULATION
     # ========================================================
 
     (
@@ -819,6 +881,7 @@ try:
 
 
 
+
     (
         put_bs_price,
         d1_put,
@@ -833,6 +896,7 @@ try:
         put_sigma
 
     )
+
 
 
 
@@ -861,6 +925,7 @@ try:
 
 
 
+
     (
         put_delta,
         put_gamma,
@@ -880,139 +945,187 @@ try:
 
     )
 
+    # ============================================================
+# THETA PER DAY
+# ============================================================
+
+call_theta_daily = (
+    call_theta / 365
+)
+
+put_theta_daily = (
+    put_theta / 365
+)
+
+
+
+# ============================================================
+# THETA PER LOT PER DAY
+# ============================================================
+
+call_theta_lot_daily = (
+
+    call_theta_daily *
+    NIFTY_LOT_SIZE
+
+)
+
+
+put_theta_lot_daily = (
+
+    put_theta_daily *
+    NIFTY_LOT_SIZE
+
+)
+
+
+
+
+# ============================================================
+# VEGA PER 1% IV CHANGE
+# ============================================================
+
+call_vega_1pct = (
+
+    call_vega / 100
+
+)
+
+
+put_vega_1pct = (
+
+    put_vega / 100
+
+)
+
+
+
+
+# ============================================================
+# VEGA PER LOT
+# ============================================================
+
+call_vega_lot = (
+
+    call_vega_1pct *
+    NIFTY_LOT_SIZE
+
+)
+
+
+put_vega_lot = (
+
+    put_vega_1pct *
+    NIFTY_LOT_SIZE
+
+)
+
+
+
+
+# ============================================================
+# RHO PER 1% RATE CHANGE
+# ============================================================
+
+call_rho_1pct = (
+
+    call_rho / 100
+
+)
+
+
+put_rho_1pct = (
+
+    put_rho / 100
+
+)
+
+
+
+
+# ============================================================
+# IV - HISTORICAL VOLATILITY
+# ============================================================
+
+call_iv_hv = (
+
+    call_iv -
+    hv_percent
+
+)
+
+
+put_iv_hv = (
+
+    put_iv -
+    hv_percent
+
+)
+
+
+
+
+# ============================================================
+# MARKET PRICE VS BS PRICE
+# ============================================================
+
+call_difference = (
+
+    call_price -
+    call_bs_price
+
+)
+
+
+put_difference = (
+
+    put_price -
+    put_bs_price
+
+)
+
+
+
+
+# ============================================================
+# PUT-CALL PARITY
+# ============================================================
+
+parity_call = (
+
+    call_price -
+    put_price
+
+)
+
+
+
+parity_theoretical = (
+
+    S -
+
+    K *
+    np.exp(-r * T)
+
+)
+
+
+
+parity_difference = (
+
+    parity_call -
+    parity_theoretical
+
+)
+
     # ========================================================
-    # THETA PER DAY
-    # ========================================================
-
-    call_theta_daily = (
-        call_theta / 365
-    )
-
-    put_theta_daily = (
-        put_theta / 365
-    )
-
-
-    # ========================================================
-    # THETA PER LOT PER DAY
-    # ========================================================
-
-    call_theta_lot_daily = (
-        call_theta_daily *
-        NIFTY_LOT_SIZE
-    )
-
-    put_theta_lot_daily = (
-        put_theta_daily *
-        NIFTY_LOT_SIZE
-    )
-
-
-    # ========================================================
-    # VEGA PER 1% IV CHANGE
-    # ========================================================
-
-    call_vega_1pct = (
-        call_vega / 100
-    )
-
-    put_vega_1pct = (
-        put_vega / 100
-    )
-
-
-    # ========================================================
-    # VEGA PER LOT
-    # ========================================================
-
-    call_vega_lot = (
-        call_vega_1pct *
-        NIFTY_LOT_SIZE
-    )
-
-    put_vega_lot = (
-        put_vega_1pct *
-        NIFTY_LOT_SIZE
-    )
-
-
-    # ========================================================
-    # RHO PER 1% RATE CHANGE
-    # ========================================================
-
-    call_rho_1pct = (
-        call_rho / 100
-    )
-
-    put_rho_1pct = (
-        put_rho / 100
-    )
-
-
-    # ========================================================
-    # IV - HV ANALYSIS
-    # ========================================================
-
-    call_iv_hv = (
-        call_iv -
-        hv_percent
-    )
-
-    put_iv_hv = (
-        put_iv -
-        hv_percent
-    )
-
-
-    # ========================================================
-    # MARKET PRICE VS BS PRICE
-    # ========================================================
-
-    call_difference = (
-        call_price -
-        call_bs_price
-    )
-
-
-    put_difference = (
-        put_price -
-        put_bs_price
-    )
-
-
-
-    # ========================================================
-    # PUT-CALL PARITY
-    # ========================================================
-
-    parity_call = (
-        call_price -
-        put_price
-    )
-
-
-    parity_theoretical = (
-
-        S -
-
-        K *
-        np.exp(-r * T)
-
-    )
-
-
-    parity_difference = (
-        parity_call -
-        parity_theoretical
-    )
-
-    # ========================================================
-    # DISPLAY LAST UPDATE TIME
+    # LAST UPDATE TIME
     # ========================================================
 
     st.success(
-        f"Last updated (IST): {now.strftime('%d-%b-%Y %H:%M:%S')}"
+        f"Last Updated (IST): {now.strftime('%d-%b-%Y %H:%M:%S')}"
     )
+
 
 
     # ========================================================
@@ -1025,6 +1138,7 @@ try:
 
 
     col1, col2, col3, col4, col5 = st.columns(5)
+
 
 
     with col1:
@@ -1070,8 +1184,9 @@ try:
 
 
 
+
     # ========================================================
-    # OPTION PRICE TABLE
+    # OPTION DATA
     # ========================================================
 
     st.subheader(
@@ -1090,6 +1205,7 @@ try:
 
         ],
 
+
         "CALL": [
 
             call_price,
@@ -1098,6 +1214,7 @@ try:
             call_difference
 
         ],
+
 
         "PUT": [
 
@@ -1112,10 +1229,15 @@ try:
 
 
     st.dataframe(
+
         option_data,
+
         use_container_width=True,
+
         hide_index=True
+
     )
+
 
 
 
@@ -1172,10 +1294,17 @@ try:
 
 
     st.dataframe(
+
         greeks_data,
+
         use_container_width=True,
+
         hide_index=True
+
     )
+
+
+
 
     # ========================================================
     # VOLATILITY ANALYSIS
@@ -1186,7 +1315,7 @@ try:
     )
 
 
-    vol_data = pd.DataFrame({
+    volatility_data = pd.DataFrame({
 
         "Metric": [
 
@@ -1197,6 +1326,7 @@ try:
             "Put IV - HV"
 
         ],
+
 
         "Value": [
 
@@ -1212,10 +1342,15 @@ try:
 
 
     st.dataframe(
-        vol_data,
+
+        volatility_data,
+
         use_container_width=True,
+
         hide_index=True
+
     )
+
 
 
 
@@ -1224,7 +1359,7 @@ try:
     # ========================================================
 
     st.subheader(
-        "🧮 Black-Scholes Calculation"
+        "🧮 Black-Scholes Parameters"
     )
 
 
@@ -1235,9 +1370,9 @@ try:
             "Spot Price (S)",
             "Strike Price (K)",
             "Time To Expiry (T)",
-            "Risk-Free Rate (%)",
-            "Call IV (%)",
-            "Put IV (%)",
+            "Risk Free Rate",
+            "Call IV",
+            "Put IV",
             "Call d1",
             "Call d2",
             "Put d1",
@@ -1265,10 +1400,15 @@ try:
 
 
     st.dataframe(
+
         bs_data,
+
         use_container_width=True,
+
         hide_index=True
+
     )
+
 
 
 
@@ -1304,15 +1444,20 @@ try:
 
 
     st.dataframe(
+
         parity_data,
+
         use_container_width=True,
+
         hide_index=True
+
     )
 
 
 
+
     # ========================================================
-    # OPTION CHAIN DISPLAY
+    # OPTION CHAIN
     # ========================================================
 
     st.subheader(
@@ -1337,6 +1482,7 @@ try:
     ]
 
 
+
     available_columns = [
 
         col
@@ -1346,14 +1492,15 @@ try:
     ]
 
 
+
     option_chain_display = (
 
         option_chain_data[
             available_columns
         ]
-        .copy()
 
     )
+
 
 
     st.dataframe(
@@ -1368,8 +1515,9 @@ try:
 
 
 
+
     # ========================================================
-    # DOWNLOAD OPTION CHAIN
+    # DOWNLOAD CSV
     # ========================================================
 
     csv_data = (
@@ -1387,11 +1535,12 @@ try:
 
         data=csv_data,
 
-        file_name="nifty_option_chain.csv",
+        file_name="NIFTY_option_chain.csv",
 
         mime="text/csv"
 
     )
+
 
 
 
@@ -1403,17 +1552,12 @@ try:
 
 
     st.caption(
-
-        "NIFTY Options Pricing & Greeks Engine | "
-        "Black-Scholes Model"
-
+        "NIFTY Options Pricing & Greeks Engine | Black-Scholes Model"
     )
 
 
     st.caption(
-
-        "Market Data Source: pnsea option-chain wrapper"
-
+        "Market Data Source: pnsea NSE Option Chain"
     )
 
 
@@ -1433,4 +1577,6 @@ except Exception as e:
     st.exception(e)
 
 
-nse = initialize_nse()
+
+
+        st.stop()
