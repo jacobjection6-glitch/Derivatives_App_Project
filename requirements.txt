@@ -1,5 +1,5 @@
 streamlit
-pnsea
+pnsea==1.2.1
 curl_cffi==0.7.4
 pandas
 numpy
