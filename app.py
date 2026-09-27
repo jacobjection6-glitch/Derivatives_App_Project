@@ -119,22 +119,26 @@ def get_historical_volatility():
 
 @st.cache_data(ttl=25)
 def get_live_nifty_data():
-    try:
-        nifty = nse.options.option_chain("NIFTY")
+    max_retries = 3
 
-        option_chain_data = nifty[0].copy()
-        expiry_dates = nifty[1]
-        nifty_spot = nifty[2]
+    for attempt in range(max_retries):
+        try:
+            nifty = nse.options.option_chain("NIFTY")
 
-        return option_chain_data, expiry_dates, nifty_spot
+            if nifty is None:
+                raise RuntimeError("NSE returned no data")
 
-    except Exception as e:
-        st.error("Unable to fetch NSE option chain data")
-        st.exception(e)
-        # Re-raise so the caller's try/except handles it and stops
-        # instead of silently returning None and causing an
-        # "cannot unpack NoneType" error downstream.
-        raise
+            option_chain_data = nifty[0].copy()
+            expiry_dates = nifty[1]
+            nifty_spot = nifty[2]
+
+            return option_chain_data, expiry_dates, nifty_spot
+
+        except Exception as e:
+            if attempt == max_retries - 1:
+                st.error("Unable to fetch NSE option chain data after 3 attempts.")
+                st.exception(e)
+                raise
 
 
 # ============================================================
